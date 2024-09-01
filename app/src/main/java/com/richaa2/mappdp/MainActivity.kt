@@ -14,7 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.richaa2.mappdp.ui.theme.MapPDPTheme
 
 class MainActivity : ComponentActivity() {
-    //TODO
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
