@@ -1,6 +1,6 @@
 package com.richaa2.mappdp.domain.model
 
-data class Location(
+data class LocationInfo(
     val id: Long = 0,
     val latitude: Double,
     val longitude: Double,

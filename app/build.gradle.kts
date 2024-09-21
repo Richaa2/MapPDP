@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.org.jetbrains.kotlin.kapt)
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.secrets)
 }
 
 android {
@@ -50,12 +51,28 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+}
+
+secrets {
+    defaultPropertiesFileName = "secrets.defaults.properties"
 }
 
 dependencies {
+    implementation(libs.coil.compose)
+    implementation (libs.androidx.material.icons.extended)
+
+    // Google Maps
+//    implementation (libs.maps.compose.utils)
+    implementation (libs.accompanist.permissions)
+    implementation (libs.play.services.maps)
+    implementation (libs.maps.compose)
+
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.play.services.location)
+    implementation(libs.androidx.ui.text.google.fonts)
     ksp(libs.room.compiler)
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
@@ -64,6 +81,10 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation (libs.androidx.hilt.navigation.compose)
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
