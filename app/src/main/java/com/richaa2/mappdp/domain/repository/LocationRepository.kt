@@ -18,5 +18,6 @@ interface LocationRepository {
     suspend fun updateLocationInfo(locationInfo: LocationInfo)
 
 
-    suspend fun deleteLocationInfoById(id: Long)
+    suspend fun deleteLocationInfoById(id: Long): Boolean
+
 }

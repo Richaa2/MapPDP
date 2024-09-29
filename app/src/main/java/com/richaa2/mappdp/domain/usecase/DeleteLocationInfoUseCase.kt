@@ -6,7 +6,7 @@ import javax.inject.Inject
 class DeleteLocationInfoUseCase @Inject constructor(
     private val locationRepository: LocationRepository
 ) {
-    suspend operator fun invoke(id: Long) {
-        locationRepository.deleteLocationInfoById(id)
+    suspend operator fun invoke(id: Long): Boolean {
+        return locationRepository.deleteLocationInfoById(id)
     }
 }

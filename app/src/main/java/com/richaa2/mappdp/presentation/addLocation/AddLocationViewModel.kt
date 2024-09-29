@@ -3,72 +3,108 @@ package com.richaa2.mappdp.presentation.addLocation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.richaa2.mappdp.domain.model.LocationInfo
+import com.richaa2.mappdp.domain.usecase.GetLocationInfoUseCase
 import com.richaa2.mappdp.domain.usecase.SaveLocationInfoUseCase
+import com.richaa2.mappdp.domain.usecase.UpdateLocationInfoUseCase
+import com.richaa2.mappdp.utils.base64ToByteArray
+import com.richaa2.mappdp.utils.byteArrayToBase64
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class AddLocationViewModel @Inject constructor(
-    private val saveLocationInfoUseCase: SaveLocationInfoUseCase
+    private val saveLocationInfoUseCase: SaveLocationInfoUseCase,
+    private val updateLocationInfoUseCase: UpdateLocationInfoUseCase,
+    private val getLocationInfoUseCase: GetLocationInfoUseCase,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AddLocationUiState())
-    val uiState: StateFlow<AddLocationUiState> = _uiState.asStateFlow()
+    private val _selectedImageState = MutableStateFlow<ByteArray?>(null)
+    val selectedImageState: StateFlow<ByteArray?> = _selectedImageState.asStateFlow()
 
-    fun onTitleChange(newTitle: String) {
-        _uiState.update { it.copy(title = newTitle) }
-    }
+    private val _titleState = MutableStateFlow("")
+    val titleState: StateFlow<String> = _titleState.asStateFlow()
 
-    fun onDescriptionChange(newDescription: String) {
-        _uiState.update { it.copy(description = newDescription) }
-    }
+    private val _descriptionState: MutableStateFlow<String?> = MutableStateFlow("")
+    val descriptionState: StateFlow<String?> = _descriptionState.asStateFlow()
 
-    fun onImageSelected(uri: String) {
-        _uiState.update { it.copy(selectedImageUri = uri) }
-    }
-    fun onRemoveSelectedImage() {
-        _uiState.update { it.copy(selectedImageUri = null) }
-    }
+    private val _errorState = MutableStateFlow<String?>(null)
+    val errorState: StateFlow<String?> = _errorState.asStateFlow()
 
-    fun saveLocation(latitude: Double, longitude: Double) {
-        val title = _uiState.value.title.trim()
-        val description = _uiState.value.description.trim()
+    private val _onNavigateBackAction = MutableSharedFlow<Boolean>()
+    val onNavigateBackAction: SharedFlow<Boolean> = _onNavigateBackAction.asSharedFlow()
 
-        if (title.isEmpty()) {
-            _uiState.update { it.copy(errorMessage = "Title cannot be empty") }
-            return
-        }
+    private var selectedLocation: LocationInfo? = null
 
+    fun initLocationInfo(locationId: Long?) {
         viewModelScope.launch {
-            val locationInfo = LocationInfo(
-                latitude = latitude,
-                longitude = longitude,
-                title = title,
-                description = if (description.isEmpty()) null else description,
-                imageUrl = _uiState.value.selectedImageUri,
-                createdAt = System.currentTimeMillis()
-            )
-            try {
-                saveLocationInfoUseCase(locationInfo)
-                _uiState.update { it.copy(isSaving = true, errorMessage = null) }
-
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isSaving = false, errorMessage = e.localizedMessage) }
+            locationId?.let {
+                selectedLocation = getLocationInfoUseCase(locationId)
+                _titleState.value = selectedLocation?.title ?: ""
+                _descriptionState.value = selectedLocation?.description
+                _selectedImageState.value = selectedLocation?.imageUrl?.base64ToByteArray()
             }
         }
     }
 
-    data class AddLocationUiState(
-        val title: String = "",
-        val description: String = "",
-        val selectedImageUri: String? = null,
-        val isSaving: Boolean = false,
-        val errorMessage: String? = null
-    )
+    fun onTitleChange(newTitle: String) {
+        _titleState.value = newTitle
+    }
+
+    fun onDescriptionChange(newDescription: String) {
+        _descriptionState.value = newDescription
+    }
+
+    fun onImageSelected(imageByteArray: ByteArray?) {
+        _selectedImageState.value = imageByteArray
+    }
+
+    fun onRemoveSelectedImage() {
+        _selectedImageState.value = null
+    }
+
+    fun saveLocation(latitude: Double, longitude: Double) {
+        val title = _titleState.value.trim()
+        val description = _descriptionState.value?.trim()
+
+        if (title.isEmpty()) {
+            _errorState.value = "Title cannot be empty"
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                selectedLocation?.let {
+                    updateLocationInfoUseCase(
+                        it.copy(
+                            title = title,
+                            description = description,
+                            imageUrl = _selectedImageState.value?.byteArrayToBase64()
+                        )
+                    )
+                } ?: run {
+                    saveLocationInfoUseCase(
+                        LocationInfo(
+                            title = title,
+                            description = description,
+                            latitude = latitude,
+                            longitude = longitude,
+                            imageUrl = _selectedImageState.value?.byteArrayToBase64(),
+                            createdAt = System.currentTimeMillis()
+                        )
+                    )
+                }
+                _onNavigateBackAction.emit(true)
+            } catch (e: Exception) {
+                _errorState.value = e.message
+            }
+        }
+    }
 }

@@ -21,7 +21,13 @@ fun AppNavigation() {
             MapScreen(
                 viewModel = mapViewModel,
                 onAddLocation = { latLng ->
-                    navController.navigate(NavRoutes.AddLocation.createRoute(latLng.latitude.toFloat(), latLng.longitude.toFloat()))
+                    navController.navigate(
+                        NavRoutes.AddLocation.createRoute(
+                            latLng.latitude.toFloat(),
+                            latLng.longitude.toFloat(),
+                            -1
+                        )
+                    )
                 },
                 onLocationDetails = { location ->
                     navController.navigate(NavRoutes.LocationDetails.createRoute(location.id))
@@ -32,17 +38,17 @@ fun AppNavigation() {
             route = NavRoutes.AddLocation.route,
             arguments = listOf(
                 navArgument("latitude") { type = NavType.FloatType },
-                navArgument("longitude") { type = NavType.FloatType }
+                navArgument("longitude") { type = NavType.FloatType },
+                navArgument("locationId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val latitude = backStackEntry.arguments?.getFloat("latitude")?.toDouble() ?: 0.0
             val longitude = backStackEntry.arguments?.getFloat("longitude")?.toDouble() ?: 0.0
+            val locationId = backStackEntry.arguments?.getString("locationId")?.toLongOrNull()
             AddLocationScreen(
                 latitude = latitude,
                 longitude = longitude,
-                onSave = {
-                    navController.popBackStack()
-                },
+                locationId = locationId,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -56,10 +62,16 @@ fun AppNavigation() {
             LocationDetailsScreen(
                 locationId = locationId,
                 onBack = {
-//                    navController.popBackStack()
-                         },
-                onDelete = {
-//                    navController.popBackStack()
+                    navController.popBackStack()
+                },
+                onEdit = { latLng, locationId ->
+                    navController.navigate(
+                        NavRoutes.AddLocation.createRoute(
+                            latLng.latitude.toFloat(),
+                            latLng.longitude.toFloat(),
+                            locationId
+                        )
+                    )
                 }
             )
         }

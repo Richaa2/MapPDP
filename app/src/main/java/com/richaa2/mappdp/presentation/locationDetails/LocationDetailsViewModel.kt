@@ -5,67 +5,48 @@ import androidx.lifecycle.viewModelScope
 import com.richaa2.mappdp.domain.model.LocationInfo
 import com.richaa2.mappdp.domain.usecase.DeleteLocationInfoUseCase
 import com.richaa2.mappdp.domain.usecase.GetLocationInfoUseCase
-import com.richaa2.mappdp.domain.usecase.UpdateLocationInfoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LocationDetailsViewModel @Inject constructor(
     private val getLocationInfoUseCase: GetLocationInfoUseCase,
-    private val updateLocationInfoUseCase: UpdateLocationInfoUseCase,
     private val deleteLocationInfoUseCase: DeleteLocationInfoUseCase,
+) : ViewModel() {
 
-    ) : ViewModel() {
-    private val _uiState = MutableStateFlow(LocationDetailsUiState())
-    val uiState: StateFlow<LocationDetailsUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<LocationDetailsState>(LocationDetailsState.Loading)
+    val uiState: StateFlow<LocationDetailsState> = _uiState.asStateFlow()
+
+    private val _errorState = MutableStateFlow<String?>(null)
+    val errorState: StateFlow<String?> = _errorState.asStateFlow()
 
     fun loadLocationDetails(locationId: Long) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val location = getLocationInfoUseCase(locationId)
-                _uiState.update { it.copy(isLoading = false, location = location) }
+                location?.let {
+                    _uiState.value = LocationDetailsState.Success(it)
+                } ?: run {
+                    _errorState.value = "Location not found"
+                }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = e.localizedMessage) }
-            }
-        }
-    }
-
-    fun updateLocation(updatedLocation: LocationInfo) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isUpdating = true, errorMessage = null) }
-            try {
-                updateLocationInfoUseCase(updatedLocation)
-                _uiState.update { it.copy(isUpdating = false, location = updatedLocation) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isUpdating = false, errorMessage = e.localizedMessage) }
+                _errorState.value = e.localizedMessage
             }
         }
     }
 
     fun deleteLocation(locationId: Long) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isDeleting = true, errorMessage = null) }
-            try {
-                deleteLocationInfoUseCase(locationId)
-                _uiState.update { it.copy(isDeleting = false) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isDeleting = false, errorMessage = e.localizedMessage) }
-            }
+            deleteLocationInfoUseCase(locationId)
         }
     }
 
-    data class LocationDetailsUiState(
-        val isLoading: Boolean = false,
-        val location: LocationInfo? = null,
-        val isUpdating: Boolean = false,
-        val isDeleting: Boolean = false,
-        val errorMessage: String? = null,
-    )
-
+    sealed class LocationDetailsState {
+        data object Loading : LocationDetailsState()
+        data class Success(val location: LocationInfo) : LocationDetailsState()
+    }
 }

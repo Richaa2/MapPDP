@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 class LocationRepositoryImpl @Inject constructor(
     private val locationDao: LocationDao,
-    private val locationMapper: LocationMapper
+    private val locationMapper: LocationMapper,
 ) : LocationRepository {
 
 
@@ -37,10 +37,8 @@ class LocationRepositoryImpl @Inject constructor(
         locationDao.updateLocation(entity)
     }
 
-    override suspend fun deleteLocationInfoById(id: Long) {
-        val entity = locationDao.getLocationById(id)
-        entity?.let {
-            locationDao.deleteLocation(it)
-        }
+    override suspend fun deleteLocationInfoById(id: Long): Boolean {
+        val rowsDeleted = locationDao.deleteLocationById(id)
+        return rowsDeleted > 0
     }
 }

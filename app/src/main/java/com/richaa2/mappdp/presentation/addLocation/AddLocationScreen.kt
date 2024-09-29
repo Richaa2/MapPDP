@@ -19,12 +19,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.richaa2.mappdp.core.ui.theme.MapPDPTheme
 import com.richaa2.mappdp.presentation.addLocation.components.ImagePicker
+import com.richaa2.mappdp.presentation.addLocation.utils.MAX_TITLE_LENGTH
+import com.richaa2.mappdp.utils.byteArrayToBitmap
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,15 +43,25 @@ fun AddLocationScreen(
     viewModel: AddLocationViewModel = hiltViewModel(),
     latitude: Double,
     longitude: Double,
-    onSave: () -> Unit,
+    locationId: Long?,
     onBack: () -> Unit
 
 ) {
-    val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isSaving) {
-        if (uiState.isSaving && uiState.errorMessage == null) {
-            onSave()
+    val selectedImageByteArray by viewModel.selectedImageState.collectAsState()
+    val title by viewModel.titleState.collectAsState()
+    val description by viewModel.descriptionState.collectAsState()
+    val errorMessage by viewModel.errorState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.initLocationInfo(locationId)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.onNavigateBackAction.collectLatest { shouldNavigateBack ->
+            if (shouldNavigateBack) {
+                onBack()
+            }
         }
     }
 
@@ -81,7 +94,10 @@ fun AddLocationScreen(
     ) { innerPadding ->
         AddLocationContent(
             modifier = Modifier.padding(innerPadding),
-            uiState = uiState,
+            selectedImageByteArray = selectedImageByteArray  ,
+            title = title,
+            description = description,
+            errorMessage = errorMessage,
             onTitleChange = { viewModel.onTitleChange(it) },
             onDescriptionChange = { viewModel.onDescriptionChange(it) },
             onImageSelected = { uri -> viewModel.onImageSelected(uri) },
@@ -93,12 +109,19 @@ fun AddLocationScreen(
 @Composable
 fun AddLocationContent(
     modifier: Modifier = Modifier,
-    uiState: AddLocationViewModel.AddLocationUiState,
+    selectedImageByteArray:ByteArray?,
+    title: String,
+    description: String?,
+    errorMessage: String?,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
-    onImageSelected: (String) -> Unit,
+    onImageSelected: (ByteArray?) -> Unit,
     onRemoveSelectedImage: () -> Unit
 ) {
+    val bitmap = remember(selectedImageByteArray) {
+        selectedImageByteArray?.byteArrayToBitmap()
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -108,25 +131,25 @@ fun AddLocationContent(
     ) {
 
         ImagePicker(
-            selectedImageUri = uiState.selectedImageUri,
+            selectedImageBitmap = bitmap,
             onImageSelected = onImageSelected,
             onImageRemoved = {
                 onRemoveSelectedImage()
             }
         )
         Spacer(modifier = Modifier.height(16.dp))
-
         OutlinedTextField(
-            value = uiState.title,
-            onValueChange = onTitleChange,
+            value = title,
+            onValueChange = {
+                if (it.length <= MAX_TITLE_LENGTH) onTitleChange(it)
+            },
             label = { Text("Title") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
-
         OutlinedTextField(
-            value = uiState.description,
+            value = description ?: "",
             onValueChange = onDescriptionChange,
             label = { Text("Description (Optional)") },
             modifier = Modifier
@@ -135,8 +158,7 @@ fun AddLocationContent(
             maxLines = 5
         )
         Spacer(modifier = Modifier.height(16.dp))
-
-        uiState.errorMessage?.let { errorMsg ->
+        errorMessage?.let { errorMsg ->
             Text(
                 text = errorMsg,
                 color = MaterialTheme.colorScheme.error,
@@ -145,13 +167,15 @@ fun AddLocationContent(
         }
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun AddLocationContentPreview() {
     MapPDPTheme {
         AddLocationContent(
-            uiState = AddLocationViewModel.AddLocationUiState(),
+            selectedImageByteArray = null,
+            title = "",
+            description = "",
+            errorMessage = null,
             onTitleChange = {},
             onDescriptionChange = {},
             onImageSelected = {},

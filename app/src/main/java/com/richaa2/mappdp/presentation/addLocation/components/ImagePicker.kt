@@ -1,5 +1,6 @@
 package com.richaa2.mappdp.presentation.addLocation.components
 
+import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -20,34 +21,39 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.richaa2.mappdp.utils.uriToByteArray
 
 @Composable
 fun ImagePicker(
-    selectedImageUri: String?,
-    onImageSelected: (String) -> Unit,
+    selectedImageBitmap: Bitmap?,
+    onImageSelected: (ByteArray?) -> Unit,
     onImageRemoved: () -> Unit,
 ) {
+
+    val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
-            onImageSelected(it.toString())
+            val byteArrayImage = it.uriToByteArray(context)
+            onImageSelected(byteArrayImage)
         }
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .height(400.dp)
             .clickable { launcher.launch("image/*") },
         contentAlignment = Alignment.Center
     ) {
-        if (selectedImageUri != null) {
+        if (selectedImageBitmap != null) {
             Image(
-                painter = rememberAsyncImagePainter(selectedImageUri),
+                painter = rememberAsyncImagePainter(selectedImageBitmap),
                 contentDescription = "Selected Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -89,7 +95,7 @@ fun ImagePicker(
 fun ImagePickerPreview() {
     MaterialTheme {
         ImagePicker(
-            selectedImageUri = null,
+            selectedImageBitmap = null,
             onImageSelected = {},
             onImageRemoved = {}
         )
