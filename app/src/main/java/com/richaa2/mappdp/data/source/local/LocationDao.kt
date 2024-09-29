@@ -11,17 +11,20 @@ import kotlinx.coroutines.flow.Flow
 interface LocationDao {
 
     @Insert
-    suspend fun insertLocation(location: LocationEntity)
+    suspend fun insertLocation(location: LocationInfoEntity)
 
     @Update
-    suspend fun updateLocation(location: LocationEntity)
+    suspend fun updateLocation(location: LocationInfoEntity)
 
     @Delete
-    suspend fun deleteLocation(location: LocationEntity)
+    suspend fun deleteLocation(location: LocationInfoEntity): Int
 
-    @Query("SELECT * FROM locations WHERE id = :id")
-    suspend fun getLocationById(id: Long): LocationEntity?
+    @Query("DELETE FROM locations_info WHERE id = :id")
+    suspend fun deleteLocationById(id: Long): Int
 
-    @Query("SELECT * FROM locations")
-    fun getAllLocations(): Flow<List<LocationEntity>>
+    @Query("SELECT * FROM locations_info WHERE id = :id")
+    suspend fun getLocationById(id: Long): LocationInfoEntity?
+
+    @Query("SELECT * FROM locations_info")
+    fun getAllLocations(): Flow<List<LocationInfoEntity>>
 }

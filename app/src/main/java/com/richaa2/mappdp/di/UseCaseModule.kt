@@ -1,9 +1,9 @@
 package com.richaa2.mappdp.di
 
 import com.richaa2.mappdp.domain.repository.LocationRepository
-import com.richaa2.mappdp.domain.usecase.DeleteLocationUseCase
-import com.richaa2.mappdp.domain.usecase.GetSavedLocationsUseCase
-import com.richaa2.mappdp.domain.usecase.SaveLocationUseCase
+import com.richaa2.mappdp.domain.usecase.DeleteLocationInfoUseCase
+import com.richaa2.mappdp.domain.usecase.GetSavedLocationsInfoUseCase
+import com.richaa2.mappdp.domain.usecase.SaveLocationInfoUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,23 +18,23 @@ object UseCaseModule {
     @Singleton
     fun provideSaveLocationUseCase(
         locationRepository: LocationRepository
-    ): SaveLocationUseCase {
-        return SaveLocationUseCase(locationRepository)
+    ): SaveLocationInfoUseCase {
+        return SaveLocationInfoUseCase(locationRepository)
     }
 
     @Provides
     @Singleton
     fun provideGetSavedLocationsUseCase(
         locationRepository: LocationRepository
-    ): GetSavedLocationsUseCase {
-        return GetSavedLocationsUseCase(locationRepository)
+    ): GetSavedLocationsInfoUseCase {
+        return GetSavedLocationsInfoUseCase(locationRepository)
     }
 
     @Provides
     @Singleton
     fun provideDeleteLocationUseCase(
         locationRepository: LocationRepository
-    ): DeleteLocationUseCase {
-        return DeleteLocationUseCase(locationRepository)
+    ): DeleteLocationInfoUseCase {
+        return DeleteLocationInfoUseCase(locationRepository)
     }
 }

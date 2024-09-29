@@ -1,13 +1,12 @@
 package com.richaa2.mappdp.domain.usecase
 
-import com.richaa2.mappdp.domain.model.Location
 import com.richaa2.mappdp.domain.repository.LocationRepository
 import javax.inject.Inject
 
-class SaveLocationUseCase @Inject constructor(
+class DeleteLocationInfoUseCase @Inject constructor(
     private val locationRepository: LocationRepository
 ) {
-    suspend operator fun invoke(location: Location) {
-        locationRepository.saveLocation(location)
+    suspend operator fun invoke(id: Long): Boolean {
+        return locationRepository.deleteLocationInfoById(id)
     }
 }

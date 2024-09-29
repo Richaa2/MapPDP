@@ -1,22 +1,23 @@
 package com.richaa2.mappdp.domain.repository
 
-import com.richaa2.mappdp.domain.model.Location
+import com.richaa2.mappdp.domain.model.LocationInfo
 import kotlinx.coroutines.flow.Flow
 
 interface LocationRepository {
 
 
-    suspend fun saveLocation(location: Location)
+    suspend fun saveLocationInfo(locationInfo: LocationInfo)
 
 
-    fun getSavedLocations(): Flow<List<Location>>
+    fun getSavedLocationsInfo(): Flow<List<LocationInfo>>
 
 
-    suspend fun getLocationById(id: Long): Location?
+    suspend fun getLocationInfoById(id: Long): LocationInfo?
 
 
-    suspend fun updateLocation(location: Location)
+    suspend fun updateLocationInfo(locationInfo: LocationInfo)
 
 
-    suspend fun deleteLocationById(id: Long)
+    suspend fun deleteLocationInfoById(id: Long): Boolean
+
 }
