@@ -5,9 +5,9 @@ import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.richaa2.mappdp.domain.usecase.DeleteLocationInfoUseCase
+import com.google.android.gms.maps.model.LatLng
+import com.richaa2.mappdp.domain.model.LocationInfo
 import com.richaa2.mappdp.domain.usecase.GetSavedLocationsInfoUseCase
-import com.richaa2.mappdp.domain.usecase.SaveLocationInfoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,11 +24,14 @@ class MapViewModel @Inject constructor(
     private val _currentLocation = MutableStateFlow<Location?>(null)
     val currentLocation: StateFlow<Location?> = _currentLocation
 
-    private val _savedLocations = MutableStateFlow<List<com.richaa2.mappdp.domain.model.LocationInfo>>(emptyList())
-    val savedLocations: StateFlow<List<com.richaa2.mappdp.domain.model.LocationInfo>> = _savedLocations
+    private val _savedLocations =
+        MutableStateFlow<List<LocationInfo>>(emptyList())
+    val savedLocations: StateFlow<List<LocationInfo>> =
+        _savedLocations
 
     init {
         loadSavedLocations()
+//        loadMockData()
     }
 
     @SuppressLint("MissingPermission")
@@ -44,6 +47,18 @@ class MapViewModel @Inject constructor(
             getSavedLocationsInfoUseCase.invoke().collect { locations ->
                 _savedLocations.value = locations
             }
+        }
+    }
+//TODO REMOVE LATER
+    private fun loadMockData() {
+        viewModelScope.launch {
+            val lviv = LatLng(49.842957, 24.031111)
+            val locations = mutableListOf<LocationInfo>()
+            for (i in 0..10) {
+                val location = LocationInfo.generateRandomLocationAround(lviv)
+                locations.add(location)
+            }
+            _savedLocations.value = locations
         }
     }
 }

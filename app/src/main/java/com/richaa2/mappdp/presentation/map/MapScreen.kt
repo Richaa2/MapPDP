@@ -2,8 +2,6 @@ package com.richaa2.mappdp.presentation.map
 
 import android.Manifest
 import android.content.Context
-import android.location.Location
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,13 +18,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.richaa2.mappdp.core.ui.theme.MapPDPTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
@@ -36,14 +32,14 @@ import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.richaa2.mappdp.R
+import com.richaa2.mappdp.core.ui.theme.MapPDPTheme
 import com.richaa2.mappdp.domain.model.LocationInfo
+import com.richaa2.mappdp.presentation.map.components.LocationClustering
 import com.richaa2.mappdp.presentation.map.components.MapFloatingActionButton
 import com.richaa2.mappdp.presentation.map.components.PermissionDeniedDialog
-import java.io.InputStreamReader
+import com.richaa2.mappdp.presentation.model.LocationClusterItem
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -135,8 +131,11 @@ fun MapContent(
     onMapLongClick: (LatLng) -> Unit,
     onMarkerClick: (LocationInfo) -> Unit,
 ) {
-    val coroutineScope = rememberCoroutineScope()
-
+    val clusterItems = remember(savedLocations) {
+        savedLocations.map { locationInfo ->
+            LocationClusterItem(locationInfo)
+        }
+    }
     Box(modifier = modifier.fillMaxSize()) {
 
         GoogleMap(
@@ -146,17 +145,11 @@ fun MapContent(
             cameraPositionState = cameraPositionState,
             onMapLongClick = onMapLongClick
         ) {
-            savedLocations.forEach { location ->
-                Marker(
-                    state = MarkerState(position = LatLng(location.latitude, location.longitude)),
-                    title = location.title,
-                    snippet = location.description,
-                    onClick = {
-                        onMarkerClick(location)
-                        true
-                    }
-                )
-            }
+            LocationClustering(
+                clusterItems = clusterItems,
+                cameraPositionState = cameraPositionState,
+                onMarkerClick = onMarkerClick
+            )
         }
     }
 }
@@ -168,7 +161,6 @@ fun getMapProperties(context: Context, isDarkTheme: Boolean): MapProperties {
         null
     }
     return MapProperties(isMyLocationEnabled = false, mapStyleOptions = mapStyle)
-
 }
 
 @Preview

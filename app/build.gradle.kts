@@ -63,10 +63,10 @@ dependencies {
     implementation (libs.androidx.material.icons.extended)
 
     // Google Maps
-//    implementation (libs.maps.compose.utils)
     implementation (libs.accompanist.permissions)
     implementation (libs.play.services.maps)
     implementation (libs.maps.compose)
+    implementation (libs.maps.compose.utils)
 
     // Room
     implementation(libs.room.runtime)
