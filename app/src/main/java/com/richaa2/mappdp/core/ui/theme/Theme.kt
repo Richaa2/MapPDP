@@ -272,18 +272,13 @@ fun MapPDPTheme(
       darkTheme -> darkScheme
       else -> lightScheme
   }
-    val primaryColor = colorScheme.primary
     val view = LocalView.current
 
         val window = (view.context as? androidx.activity.ComponentActivity)?.window
-        window?.statusBarColor = primaryColor.toArgb()
 
-
-        val insetsController = WindowCompat.getInsetsController(window!!, view)
-        if (isSystemInDarkTheme()) {
-            insetsController.isAppearanceLightStatusBars = false
-        } else {
-            insetsController.isAppearanceLightStatusBars = true
+        window?.let {
+        val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !isSystemInDarkTheme()
         }
 
   MaterialTheme(

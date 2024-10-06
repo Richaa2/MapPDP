@@ -4,8 +4,11 @@ import android.Manifest
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -105,11 +108,14 @@ fun MapScreen(
                 )
             }
         },
+//        contentWindowInsets = WindowInsets.systemBars,
         content = { paddingValues ->
             MapContent(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues)
+//                    .consumeWindowInsets(paddingValues)
+                ,
                 mapProperties = mapProperties.value,
                 uiSettings = uiSettings.value,
                 cameraPositionState = cameraPositionState,

@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
@@ -44,10 +48,8 @@ fun AddLocationScreen(
     latitude: Double,
     longitude: Double,
     locationId: Long?,
-    onBack: () -> Unit
-
-) {
-
+    onBack: () -> Unit,
+    ) {
     val selectedImageByteArray by viewModel.selectedImageState.collectAsState()
     val title by viewModel.titleState.collectAsState()
     val description by viewModel.descriptionState.collectAsState()
@@ -66,35 +68,39 @@ fun AddLocationScreen(
     }
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.imePadding(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Add Location") },
+                title = { Text(if (locationId == null) "Add Location" else "Edit Location") },
                 navigationIcon = {
                     IconButton(onClick = { onBack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
 
-                )
+                    )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
+                modifier = Modifier,
                 onClick = { viewModel.saveLocation(latitude, longitude) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Filled.Save, contentDescription = "Save Location")
             }
-        }
+        },
     ) { innerPadding ->
         AddLocationContent(
-            modifier = Modifier.padding(innerPadding),
-            selectedImageByteArray = selectedImageByteArray  ,
+            modifier = Modifier
+                .padding(innerPadding),
+            selectedImageByteArray = selectedImageByteArray,
             title = title,
             description = description,
             errorMessage = errorMessage,
@@ -109,64 +115,69 @@ fun AddLocationScreen(
 @Composable
 fun AddLocationContent(
     modifier: Modifier = Modifier,
-    selectedImageByteArray:ByteArray?,
+    selectedImageByteArray: ByteArray?,
     title: String,
     description: String?,
     errorMessage: String?,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onImageSelected: (ByteArray?) -> Unit,
-    onRemoveSelectedImage: () -> Unit
+    onRemoveSelectedImage: () -> Unit,
 ) {
     val bitmap = remember(selectedImageByteArray) {
         selectedImageByteArray?.byteArrayToBitmap()
     }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        ImagePicker(
-            selectedImageBitmap = bitmap,
-            onImageSelected = onImageSelected,
-            onImageRemoved = {
-                onRemoveSelectedImage()
-            }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = title,
-            onValueChange = {
-                if (it.length <= MAX_TITLE_LENGTH) onTitleChange(it)
-            },
-            label = { Text("Title") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = description ?: "",
-            onValueChange = onDescriptionChange,
-            label = { Text("Description (Optional)") },
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            maxLines = 5
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        errorMessage?.let { errorMsg ->
-            Text(
-                text = errorMsg,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            ImagePicker(
+                selectedImageBitmap = bitmap,
+                onImageSelected = onImageSelected,
+                onImageRemoved = onRemoveSelectedImage
             )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = title,
+                onValueChange = {
+                    if (it.length <= MAX_TITLE_LENGTH) onTitleChange(it)
+                },
+                label = { Text("Title") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = description ?: "",
+                onValueChange = onDescriptionChange,
+                label = { Text("Description (Optional)") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 150.dp),
+                maxLines = 5
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            errorMessage?.let { errorMsg ->
+                Text(
+                    text = errorMsg,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun AddLocationContentPreview() {

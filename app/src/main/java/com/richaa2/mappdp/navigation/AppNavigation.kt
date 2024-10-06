@@ -1,5 +1,14 @@
 package com.richaa2.mappdp.navigation
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.*
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -22,10 +31,9 @@ fun AppNavigation() {
                 viewModel = mapViewModel,
                 onAddLocation = { latLng ->
                     navController.navigate(
-                        NavRoutes.AddLocation.createRoute(
+                        NavRoutes.AddLocation.createRouteCreate(
                             latLng.latitude.toFloat(),
                             latLng.longitude.toFloat(),
-                            -1
                         )
                     )
                 },
@@ -66,7 +74,7 @@ fun AppNavigation() {
                 },
                 onEdit = { latLng, locationId ->
                     navController.navigate(
-                        NavRoutes.AddLocation.createRoute(
+                        NavRoutes.AddLocation.createRouteEdit(
                             latLng.latitude.toFloat(),
                             latLng.longitude.toFloat(),
                             locationId
