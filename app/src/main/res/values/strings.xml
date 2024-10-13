@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Map PDP</string>
+    <string name="error_network">Problems connecting to the network</string>
+    <string name="error_server">Server error: %1$d</string>
+    <string name="error_unknown">Unknown error: %1$d</string>
+    <string name="error_location_not_found">Location not found</string>
+    <string name="title_cannot_be_empty">Title cannot be empty</string>
+    <string name="location_disabled_message">Location is disabled. Please enable it in settings.</string>
+
 </resources>

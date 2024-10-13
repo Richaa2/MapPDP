@@ -14,7 +14,6 @@ class LocationMapper @Inject constructor(){
             title = entity.title,
             description = entity.description,
             imageUrl = entity.imageUrl,
-            createdAt = entity.createdAt
         )
     }
 
@@ -26,7 +25,6 @@ class LocationMapper @Inject constructor(){
             title = domain.title,
             description = domain.description,
             imageUrl = domain.imageUrl,
-            createdAt = domain.createdAt
         )
     }
 }

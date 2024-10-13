@@ -1,4 +1,4 @@
-package com.richaa2.mappdp.core.ui.theme
+package com.richaa2.mappdp.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.FontFamily

@@ -1,4 +1,4 @@
-package com.richaa2.mappdp.core.ui.theme
+package com.richaa2.mappdp.designsystem.theme
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF006973)

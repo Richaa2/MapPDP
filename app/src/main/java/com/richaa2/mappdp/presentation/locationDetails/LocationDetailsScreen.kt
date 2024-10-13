@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -45,37 +43,49 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.model.LatLng
-import com.richaa2.mappdp.core.ui.theme.MapPDPTheme
+import com.richaa2.mappdp.designsystem.components.LoadingContent
+import com.richaa2.mappdp.designsystem.components.NotFoundContent
+import com.richaa2.mappdp.designsystem.theme.MapPDPTheme
 import com.richaa2.mappdp.domain.model.LocationInfo
 import com.richaa2.mappdp.presentation.locationDetails.components.ConfirmationDialog
 import com.richaa2.mappdp.utils.base64ToBitmap
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationDetailsScreen(
     modifier: Modifier = Modifier,
-    locationDetailsViewModel: LocationDetailsViewModel = hiltViewModel(),
+    viewModel: LocationDetailsViewModel = hiltViewModel(),
     locationId: Long,
     onBack: () -> Unit,
     onEdit: (LatLng, Long) -> Unit,
 ) {
-    val uiState by locationDetailsViewModel.uiState.collectAsState()
-    val errorState by locationDetailsViewModel.errorState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val errorMessage by viewModel.errorState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
-    //TODO GLOBAL SNACKBAR AND ERROR HANDLING
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(key1 = locationId) {
-        locationDetailsViewModel.loadLocationDetails(locationId)
+        viewModel.loadLocationDetails(locationId)
     }
 
-    LaunchedEffect(errorState) {
-        errorState?.let {
-            snackbarHostState.showSnackbar(it)
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackBarHostState.showSnackbar(it)
+            viewModel.clearErrorMessage()
         }
     }
+    LaunchedEffect(Unit) {
+        viewModel.onNavigateBackAction.collectLatest { shouldNavigateBack ->
+            if (shouldNavigateBack) {
+                onBack()
+            }
+        }
+    }
+
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Location Details") },
@@ -123,10 +133,7 @@ fun LocationDetailsScreen(
             }
 
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-
     ) { innerPadding ->
-
         when (val state = uiState) {
             is LocationDetailsViewModel.LocationDetailsState.Success -> {
                 LocationDetailContent(
@@ -136,7 +143,11 @@ fun LocationDetailsScreen(
             }
 
             is LocationDetailsViewModel.LocationDetailsState.Loading -> {
-                LoadingScreen(innerPadding)
+                LoadingContent(innerPadding)
+            }
+
+            is LocationDetailsViewModel.LocationDetailsState.NotFound -> {
+                NotFoundContent()
             }
         }
         if (showDeleteDialog) {
@@ -144,8 +155,7 @@ fun LocationDetailsScreen(
                 title = "Confirm Delete",
                 message = "Are you sure you want to delete this location?",
                 onConfirm = {
-                    locationDetailsViewModel.deleteLocation(locationId)
-                    onBack()
+                    viewModel.deleteLocation(locationId)
                     showDeleteDialog = false
                 },
                 onDismiss = { showDeleteDialog = false }
@@ -153,18 +163,6 @@ fun LocationDetailsScreen(
         }
     }
 
-}
-
-@Composable
-private fun LoadingScreen(innerPadding: PaddingValues) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
-    }
 }
 
 
@@ -230,25 +228,23 @@ fun LocationDetailContent(
     }
 }
 
-@Preview
+
+@Preview(showBackground = true)
 @Composable
 private fun LocationDetailsPreview() {
     MapPDPTheme {
-        MapPDPTheme {
-            LocationDetailContent(
-                location = LocationInfo(
-                    id = 1,
-                    title = "Lviv",
-                    description = "Львів (МФА: [ˈʎʋiu̯] ( прослухати)) — місто в Україні, адміністративний центр області, агломерації, району, міської громади, національно-культурний та освітньо-науковий осередок країни, великий промисловий центр і транспортний вузол, вважається столицею Галичини та центром Західної України. За кількістю населення — п'яте місто країни (717 273 станом на 01.01.2022)[2].\n" +
-                            "\n" +
-                            "Львів заснував король Данило приблизно у 1231—1235 роках (перша згадка від 1256 року). Близько 1272 року місто стало столицею Королівства Русі (Галицько-Волинського князівства). Невдовзі після смерті князя Юрія II Львів на понад чотири століття опинився під владою Королівства Польського. 1356 року місто отримало маґдебурзьке право; в добу Середньовіччя Львів був важливим торговельним центром. За австрійського панування місто стало осередком українського та польського національного рухів. Після розпаду Австро-Угорщини восени 1918 року Львів деякий час був столицею Західноукраїнської Народної Республіки, але після українсько-польської битви за місто в листопаді 1918 перейшов до Польщі, що в 1922—1923 було визнано міжнародними пактами та угодами. Під час Другої світової війни місто захопив Радянський Союз, а згодом — Німеччина. Після війни було юридично закріплено ялтинську угоду 1945, за якою Східна Галичина і зокрема Львів лишався у складі Української РСР. 1946 року між Польщею та УРСР відбувся обмін населення, який разом із наслідками війни суттєво вплинув на населення Львова. З 1991 року Львів перебуває у складі України.\n" +
-                            "\n",
-                    latitude = 12.0,
-                    longitude = 12.0,
-                    imageUrl = null,
-                    createdAt = System.currentTimeMillis()
-                )
+        LocationDetailContent(
+            location = LocationInfo(
+                id = 1,
+                title = "Lviv",
+                description = "Lviv is a city in Ukraine, the administrative center of the region, agglomeration, district, urban community, the national-cultural and educational-scientific center of the country, a large industrial center and transport hub, it is considered the capital of Galicia and the center of Western of Ukraine. It is the fifth largest city in the country in terms of population (717,273 as of January 1, 2022)[2].\n" +
+                        "\n" +
+                        "Lviv was founded by King Danylo around 1231-1235 (the first mention is from 1256). Around 1272, the city became the capital of the Kingdom of Rus (Halytskyi-Volyn Principality). Shortly after the death of Prince Yuri II, Lviv came under the rule of the Kingdom of Poland for more than four centuries. In 1356, the city received Magdeburg rights; During the Middle Ages, Lviv was an important trade center. During Austrian rule, the city became a center of Ukrainian and Polish national movements. After the collapse of Austria-Hungary in the fall of 1918, Lviv was for some time the capital of the West Ukrainian People's Republic, but after the Ukrainian-Polish battle for the city in November 1918, it passed to Poland, which was recognized by international pacts and agreements in 1922-1923. During the Second World War, the city was captured by the Soviet Union, and later by Germany. After the war, the Yalta Agreement of 1945 was legally enshrined, according to which Eastern Galicia and in particular Lviv remained part of the Ukrainian SSR. In 1946, a population exchange took place between Poland and the Ukrainian SSR, which, together with the consequences of the war, significantly affected the population of Lviv. Since 1991, Lviv has been part of Ukraine.\n" +
+                        "\n",
+                latitude = 12.0,
+                longitude = 12.0,
+                imageUrl = null,
             )
-        }
+        )
     }
 }

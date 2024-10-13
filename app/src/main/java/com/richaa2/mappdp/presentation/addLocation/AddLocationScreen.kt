@@ -22,6 +22,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -34,7 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.richaa2.mappdp.core.ui.theme.MapPDPTheme
+import com.richaa2.mappdp.designsystem.components.LoadingContent
+import com.richaa2.mappdp.designsystem.theme.MapPDPTheme
 import com.richaa2.mappdp.presentation.addLocation.components.ImagePicker
 import com.richaa2.mappdp.presentation.addLocation.utils.MAX_TITLE_LENGTH
 import com.richaa2.mappdp.utils.byteArrayToBitmap
@@ -49,31 +52,38 @@ fun AddLocationScreen(
     longitude: Double,
     locationId: Long?,
     onBack: () -> Unit,
-    ) {
-    val selectedImageByteArray by viewModel.selectedImageState.collectAsState()
-    val title by viewModel.titleState.collectAsState()
-    val description by viewModel.descriptionState.collectAsState()
+) {
+    val formState by viewModel.formState.collectAsState()
     val errorMessage by viewModel.errorState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val snackBarHostState = remember { SnackbarHostState() }
 
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackBarHostState.showSnackbar(it)
+            viewModel.clearErrorMessage()
+        }
+    }
     LaunchedEffect(Unit) {
         viewModel.initLocationInfo(locationId)
     }
 
     LaunchedEffect(Unit) {
-        viewModel.onNavigateBackAction.collectLatest { shouldNavigateBack ->
-            if (shouldNavigateBack) {
-                onBack()
+        viewModel.navigationEvent.collectLatest { event ->
+            when (event) {
+                AddLocationViewModel.NavigationEvent.NavigateBack -> onBack()
             }
         }
     }
 
     Scaffold(
         modifier = modifier.imePadding(),
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if (locationId == null) "Add Location" else "Edit Location") },
                 navigationIcon = {
-                    IconButton(onClick = { onBack() }) {
+                    IconButton(onClick = { viewModel.onNavigateBack() }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onPrimary
@@ -90,42 +100,46 @@ fun AddLocationScreen(
         floatingActionButton = {
             FloatingActionButton(
                 modifier = Modifier,
-                onClick = { viewModel.saveLocation(latitude, longitude) },
+                onClick = {
+                    viewModel.saveLocation(latitude, longitude)
+                },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Filled.Save, contentDescription = "Save Location")
             }
         },
     ) { innerPadding ->
-        AddLocationContent(
-            modifier = Modifier
-                .padding(innerPadding),
-            selectedImageByteArray = selectedImageByteArray,
-            title = title,
-            description = description,
-            errorMessage = errorMessage,
-            onTitleChange = { viewModel.onTitleChange(it) },
-            onDescriptionChange = { viewModel.onDescriptionChange(it) },
-            onImageSelected = { uri -> viewModel.onImageSelected(uri) },
-            onRemoveSelectedImage = { viewModel.onRemoveSelectedImage() }
-        )
+        when (uiState) {
+            is AddLocationViewModel.AddLocationState.Loading -> {
+                LoadingContent(innerPadding = innerPadding)
+            }
+
+            is AddLocationViewModel.AddLocationState.Success -> {
+                AddLocationContent(
+                    modifier = Modifier
+                        .padding(innerPadding),
+                    formState = formState,
+                    onTitleChange = { viewModel.onTitleChange(it) },
+                    onDescriptionChange = { viewModel.onDescriptionChange(it) },
+                    onImageSelected = { uri -> viewModel.onImageSelected(uri) },
+                    onRemoveSelectedImage = { viewModel.onRemoveSelectedImage() }
+                )
+            }
+        }
     }
 }
 
 @Composable
 fun AddLocationContent(
     modifier: Modifier = Modifier,
-    selectedImageByteArray: ByteArray?,
-    title: String,
-    description: String?,
-    errorMessage: String?,
+    formState: AddLocationFormState,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onImageSelected: (ByteArray?) -> Unit,
     onRemoveSelectedImage: () -> Unit,
 ) {
-    val bitmap = remember(selectedImageByteArray) {
-        selectedImageByteArray?.byteArrayToBitmap()
+    val bitmap = remember(formState.image) {
+        formState.image?.byteArrayToBitmap()
     }
 
     Column(
@@ -148,32 +162,44 @@ fun AddLocationContent(
             )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
-                value = title,
+                value = formState.title,
                 onValueChange = {
                     if (it.length <= MAX_TITLE_LENGTH) onTitleChange(it)
                 },
                 label = { Text("Title") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = formState.titleError != null,
+                supportingText = {
+                    formState.titleError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = description ?: "",
+                value = formState.description,
                 onValueChange = onDescriptionChange,
                 label = { Text("Description (Optional)") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 150.dp),
-                maxLines = 5
+                maxLines = 5,
+                isError = formState.descriptionError != null,
+                supportingText = {
+                    formState.descriptionError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
             )
             Spacer(modifier = Modifier.height(16.dp))
-            errorMessage?.let { errorMsg ->
-                Text(
-                    text = errorMsg,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+
         }
     }
 }
@@ -183,10 +209,7 @@ fun AddLocationContent(
 fun AddLocationContentPreview() {
     MapPDPTheme {
         AddLocationContent(
-            selectedImageByteArray = null,
-            title = "",
-            description = "",
-            errorMessage = null,
+            formState = AddLocationFormState(),
             onTitleChange = {},
             onDescriptionChange = {},
             onImageSelected = {},

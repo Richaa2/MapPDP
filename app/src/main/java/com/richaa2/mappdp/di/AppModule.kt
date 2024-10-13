@@ -4,6 +4,7 @@ package com.richaa2.mappdp.di
 import android.content.Context
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.richaa2.mappdp.core.common.ErrorHandler
 import com.richaa2.mappdp.data.mapper.LocationMapper
 import com.richaa2.mappdp.data.repository.LocationRepositoryImpl
 import com.richaa2.mappdp.data.source.local.LocationDao
@@ -25,13 +26,15 @@ object AppModule {
     fun provideLocationRepository(
         locationDao: LocationDao,
         locationMapper: LocationMapper,
+        errorHandler: ErrorHandler,
     ): LocationRepository {
-        return LocationRepositoryImpl(locationDao, locationMapper)
+        return LocationRepositoryImpl(locationDao, locationMapper, errorHandler)
     }
+
     @Provides
     @Singleton
     fun provideFusedLocationProviderClient(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): FusedLocationProviderClient {
         return LocationServices.getFusedLocationProviderClient(context)
     }

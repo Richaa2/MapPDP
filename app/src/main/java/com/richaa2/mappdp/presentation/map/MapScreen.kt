@@ -4,15 +4,14 @@ import android.Manifest
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -37,7 +36,8 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.richaa2.mappdp.R
-import com.richaa2.mappdp.core.ui.theme.MapPDPTheme
+import com.richaa2.mappdp.designsystem.components.LoadingContent
+import com.richaa2.mappdp.designsystem.theme.MapPDPTheme
 import com.richaa2.mappdp.domain.model.LocationInfo
 import com.richaa2.mappdp.presentation.map.components.LocationClustering
 import com.richaa2.mappdp.presentation.map.components.MapFloatingActionButton
@@ -51,12 +51,16 @@ fun MapScreen(
     onAddLocation: (LatLng) -> Unit,
     onLocationDetails: (LocationInfo) -> Unit,
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val errorMessage by viewModel.errorState.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
     val mapProperties = remember {
         mutableStateOf(getMapProperties(context, isDarkTheme))
     }
-
     val uiSettings = remember {
         mutableStateOf(MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false))
     }
@@ -70,19 +74,25 @@ fun MapScreen(
             if (it) {
                 showPermissionDialog = false
                 mapProperties.value = mapProperties.value.copy(isMyLocationEnabled = true)
-                viewModel.getCurrentLocation()
+                viewModel.startLocationUpdates()
             } else {
                 showPermissionDialog = true
             }
         }
     )
 
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearErrorMessage()
+        }
+    }
+
     LaunchedEffect(Unit) {
         locationPermissionState.launchPermissionRequest()
     }
 
     val currentLocation by viewModel.currentLocation.collectAsState()
-    val savedLocations by viewModel.savedLocations.collectAsState()
     if (showPermissionDialog && locationPermissionState.status.shouldShowRationale) {
         PermissionDeniedDialog(
             onDismiss = { showPermissionDialog = false },
@@ -90,6 +100,7 @@ fun MapScreen(
         )
     }
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Map") },
@@ -101,28 +112,37 @@ fun MapScreen(
             )
         },
         floatingActionButton = {
-            currentLocation?.let {
-                MapFloatingActionButton(
-                    cameraPositionState = cameraPositionState,
-                    currentLocation = it
-                )
-            }
-        },
-//        contentWindowInsets = WindowInsets.systemBars,
-        content = { paddingValues ->
-            MapContent(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-//                    .consumeWindowInsets(paddingValues)
-                ,
-                mapProperties = mapProperties.value,
-                uiSettings = uiSettings.value,
+            MapFloatingActionButton(
                 cameraPositionState = cameraPositionState,
-                savedLocations = savedLocations,
-                onMapLongClick = { latLng -> onAddLocation(latLng) },
-                onMarkerClick = { location -> onLocationDetails(location) }
+                currentLocation = currentLocation,
+                onDisabledClick = {
+                    if (errorMessage == null) {
+                         viewModel.onLocationDisabledMessage()
+                    }
+                }
             )
+        },
+        content = { paddingValues ->
+            when (val state = uiState) {
+                is MapViewModel.MapUiState.Loading -> {
+                    LoadingContent(innerPadding = paddingValues)
+                }
+
+                is MapViewModel.MapUiState.Success -> {
+                    MapContent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        mapProperties = mapProperties.value,
+                        uiSettings = uiSettings.value,
+                        cameraPositionState = cameraPositionState,
+                        savedLocations = state.locations,
+                        onMapLongClick = { latLng -> onAddLocation(latLng) },
+                        onMarkerClick = { location -> onLocationDetails(location) }
+                    )
+                }
+            }
+
         }
     )
 }
@@ -149,7 +169,7 @@ fun MapContent(
             properties = mapProperties,
             uiSettings = uiSettings,
             cameraPositionState = cameraPositionState,
-            onMapLongClick = onMapLongClick
+            onMapLongClick = onMapLongClick,
         ) {
             LocationClustering(
                 clusterItems = clusterItems,
@@ -160,7 +180,7 @@ fun MapContent(
     }
 }
 
-fun getMapProperties(context: Context, isDarkTheme: Boolean): MapProperties {
+private fun getMapProperties(context: Context, isDarkTheme: Boolean): MapProperties {
     val mapStyle = if (isDarkTheme) {
         MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark)
     } else {

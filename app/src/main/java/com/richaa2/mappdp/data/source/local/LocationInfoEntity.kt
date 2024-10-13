@@ -11,5 +11,4 @@ data class LocationInfoEntity(
     val title: String,
     val description: String?,
     val imageUrl: String?,
-    val createdAt: Long
 )

@@ -2,19 +2,15 @@ package com.richaa2.mappdp.data.source.local
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Update
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LocationDao {
 
-    @Insert
-    suspend fun insertLocation(location: LocationInfoEntity)
-
-    @Update
-    suspend fun updateLocation(location: LocationInfoEntity)
+    @Upsert
+    suspend fun upsertLocation(location: LocationInfoEntity)
 
     @Delete
     suspend fun deleteLocation(location: LocationInfoEntity): Int

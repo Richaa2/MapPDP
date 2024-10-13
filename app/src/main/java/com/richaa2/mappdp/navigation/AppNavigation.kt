@@ -1,14 +1,5 @@
 package com.richaa2.mappdp.navigation
 
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.*
-import androidx.compose.animation.core.EaseIn
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -57,7 +48,9 @@ fun AppNavigation() {
                 latitude = latitude,
                 longitude = longitude,
                 locationId = locationId,
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    if (navController.previousBackStackEntry != null) navController.popBackStack()
+                }
             )
         }
         composable(
@@ -66,11 +59,11 @@ fun AppNavigation() {
                 navArgument("locationId") { type = NavType.LongType }
             )
         ) { backStackEntry ->
-            val locationId = backStackEntry.arguments?.getLong("locationId") ?: 0
+            val stackLocationId = backStackEntry.arguments?.getLong("locationId") ?: 0
             LocationDetailsScreen(
-                locationId = locationId,
+                locationId = stackLocationId,
                 onBack = {
-                    navController.popBackStack()
+                    if (navController.previousBackStackEntry != null) navController.popBackStack()
                 },
                 onEdit = { latLng, locationId ->
                     navController.navigate(
