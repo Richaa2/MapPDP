@@ -33,9 +33,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.richaa2.mappdp.R
 import com.richaa2.mappdp.designsystem.components.LoadingContent
 import com.richaa2.mappdp.designsystem.theme.MapPDPTheme
 import com.richaa2.mappdp.presentation.addLocation.components.ImagePicker
@@ -81,11 +83,11 @@ fun AddLocationScreen(
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(if (locationId == null) "Add Location" else "Edit Location") },
+                title = { Text(if (locationId == null) stringResource(R.string.add_location) else stringResource(R.string.edit_location)) },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onNavigateBack() }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back",
+                            Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -105,7 +107,7 @@ fun AddLocationScreen(
                 },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Filled.Save, contentDescription = "Save Location")
+                Icon(Icons.Filled.Save, contentDescription = stringResource(R.string.save_location))
             }
         },
     ) { innerPadding ->
@@ -166,7 +168,7 @@ fun AddLocationContent(
                 onValueChange = {
                     if (it.length <= MAX_TITLE_LENGTH) onTitleChange(it)
                 },
-                label = { Text("Title") },
+                label = { Text(stringResource(R.string.title)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 isError = formState.titleError != null,
@@ -183,7 +185,7 @@ fun AddLocationContent(
             OutlinedTextField(
                 value = formState.description,
                 onValueChange = onDescriptionChange,
-                label = { Text("Description (Optional)") },
+                label = { Text(stringResource(R.string.description_optional)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 150.dp),

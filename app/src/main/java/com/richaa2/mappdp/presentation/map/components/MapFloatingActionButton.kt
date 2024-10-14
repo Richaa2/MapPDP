@@ -10,12 +10,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.richaa2.mappdp.R
 import kotlinx.coroutines.launch
 
 @Composable
@@ -55,7 +57,7 @@ fun MapFloatingActionButton(
     ) {
         Icon(
             imageVector = Icons.Filled.MyLocation,
-            contentDescription = "Current Location"
+            contentDescription = stringResource(R.string.current_location)
         )
     }
 }

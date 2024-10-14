@@ -38,11 +38,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.model.LatLng
+import com.richaa2.mappdp.R
 import com.richaa2.mappdp.designsystem.components.LoadingContent
 import com.richaa2.mappdp.designsystem.components.NotFoundContent
 import com.richaa2.mappdp.designsystem.theme.MapPDPTheme
@@ -88,10 +90,15 @@ fun LocationDetailsScreen(
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Location Details") },
+                title = { Text(stringResource(R.string.location_details)) },
                 navigationIcon = {
                     IconButton(onClick = { onBack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(
+                                R.string.back
+                            )
+                        )
                     }
                 },
                 actions = {
@@ -100,7 +107,10 @@ fun LocationDetailsScreen(
                             IconButton(onClick = {
                                 showDeleteDialog = true
                             }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Delete Location")
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.delete_location)
+                                )
                             }
                         }
                     }
@@ -127,7 +137,10 @@ fun LocationDetailsScreen(
                         },
                         containerColor = MaterialTheme.colorScheme.primary
                     ) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Edit Location")
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = stringResource(R.string.edit_location)
+                        )
                     }
                 }
             }
@@ -152,8 +165,8 @@ fun LocationDetailsScreen(
         }
         if (showDeleteDialog) {
             ConfirmationDialog(
-                title = "Confirm Delete",
-                message = "Are you sure you want to delete this location?",
+                title = stringResource(R.string.confirm_delete),
+                message = stringResource(R.string.are_you_sure_you_want_to_delete_this_location),
                 onConfirm = {
                     viewModel.deleteLocation(locationId)
                     showDeleteDialog = false
@@ -188,7 +201,7 @@ fun LocationDetailContent(
             if (location.imageUrl?.base64ToBitmap() != null) {
                 Image(
                     painter = rememberAsyncImagePainter(location.imageUrl.base64ToBitmap()),
-                    contentDescription = "Selected Image",
+                    contentDescription = stringResource(R.string.selected_image),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
@@ -205,7 +218,7 @@ fun LocationDetailContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No Image for this location",
+                        text = stringResource(R.string.no_image_for_this_location),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -220,7 +233,7 @@ fun LocationDetailContent(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = location.description ?: "Description empty",
+            text = location.description ?: stringResource(R.string.description_empty),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground
         )

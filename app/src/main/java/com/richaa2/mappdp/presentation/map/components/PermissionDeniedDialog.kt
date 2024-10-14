@@ -4,6 +4,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.richaa2.mappdp.R
 
 @Composable
 fun PermissionDeniedDialog(
@@ -13,19 +15,19 @@ fun PermissionDeniedDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Location Permission Required")
+            Text(text = stringResource(R.string.location_permission_required))
         },
         text = {
-            Text("Without location permission, your current location will not be visible on the map.")
+            Text(stringResource(R.string.without_location_permission_your_current_location_will_not_be_visible_on_the_map))
         },
         confirmButton = {
             TextButton(onClick = onRequestPermission) {
-                Text("Grant Permission")
+                Text(stringResource(R.string.grant_permission))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Dismiss")
+                Text(stringResource(R.string.dismiss))
             }
         }
     )

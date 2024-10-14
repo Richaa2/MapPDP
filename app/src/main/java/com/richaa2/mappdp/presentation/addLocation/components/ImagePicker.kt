@@ -22,9 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.richaa2.mappdp.R
 import com.richaa2.mappdp.utils.uriToByteArray
 
 @Composable
@@ -54,13 +56,13 @@ fun ImagePicker(
         if (selectedImageBitmap != null) {
             Image(
                 painter = rememberAsyncImagePainter(selectedImageBitmap),
-                contentDescription = "Selected Image",
+                contentDescription = stringResource(R.string.selected_image),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(MaterialTheme.shapes.small)
             )
-            Icon(imageVector = Icons.Filled.Close, contentDescription = "Remove Image",
+            Icon(imageVector = Icons.Filled.Close, contentDescription = stringResource(R.string.remove_image),
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.TopEnd)
@@ -82,7 +84,7 @@ fun ImagePicker(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Tap to select an image",
+                    text = stringResource(R.string.tap_to_select_an_image),
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
