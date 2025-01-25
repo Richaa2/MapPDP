@@ -3,7 +3,7 @@ package com.richaa2.mappdp.data.error
 import android.net.http.HttpException
 import com.richaa2.mappdp.core.common.ErrorHandler
 import com.richaa2.mappdp.core.common.ResourceProvider
-import com.richaa2.mappdp.R // Імпорт вашого R файлу
+import com.richaa2.mappdp.R
 import java.io.IOException
 import javax.inject.Inject
 

@@ -44,7 +44,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.6"
     }
     packaging {
         resources {
@@ -56,6 +56,7 @@ android {
 }
 
 secrets {
+    propertiesFileName = "secrets.properties"
     defaultPropertiesFileName = "secrets.defaults.properties"
 }
 
